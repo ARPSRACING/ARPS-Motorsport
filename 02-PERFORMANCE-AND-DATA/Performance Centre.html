@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARPS MOTORSPORT - Driver Performance Centre</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Orbitron for Telemetry styling -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        arps: {
+                            navy: '#0b132b',
+                            card: '#131e3a',
+                            cardBorder: '#1e293b',
+                            accent: '#00f0ff',
+                            accentGlow: 'rgba(0, 240, 255, 0.25)',
+                            electric: '#0284c7',
+                            silver: '#94a3b8',
+                            danger: '#ef4444',
+                            warning: '#f59e0b',
+                            success: '#10b981',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Orbitron', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b132b;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.15), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.05), transparent 30%);
+            background-attachment: fixed;
+        }
+
+        .font-tech {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(19, 30, 58, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card-hover:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 12px 28px -5px rgba(0, 240, 255, 0.15);
+        }
+
+        .electric-glow {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+
+        .electric-text-glow {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b132b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+
+        /* Live Pulse Animation */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        .live-pulse {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12 text-slate-100">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-tech font-bold text-slate-950 text-xl shadow-lg shadow-cyan-500/20">
+                    A
+                </div>
+                <div>
+                    <h1 class="font-tech font-bold text-lg sm:text-xl tracking-wider text-white flex items-center gap-2">
+                        <span>ARPS</span>
+                        <span class="text-arps-accent text-xs px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 font-sans">PERFORMANCE</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Timeframe Filter -->
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-slate-900/90 p-1 rounded-lg border border-slate-800 text-xs sm:text-sm">
+                <button onclick="setTimeframe('5')" id="filter-5" class="timeframe-btn px-3 py-1.5 rounded-md font-medium transition-all text-slate-400 hover:text-white">
+                    Last 5
+                </button>
+                <button onclick="setTimeframe('10')" id="filter-10" class="timeframe-btn px-3 py-1.5 rounded-md font-medium transition-all bg-arps-accent text-slate-950 font-semibold shadow-md shadow-cyan-500/20">
+                    Last 10
+                </button>
+                <button onclick="setTimeframe('season')" id="filter-season" class="timeframe-btn px-3 py-1.5 rounded-md font-medium transition-all text-slate-400 hover:text-white">
+                    Full Season
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+
+        <!-- SECTION 1: Top Header / Driver Profile Banner -->
+        <section class="glass-card rounded-2xl p-5 sm:p-6 relative overflow-hidden border-l-4 border-l-arps-accent">
+            <!-- Background accent graphics -->
+            <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+                <!-- Driver Info Title -->
+                <div>
+                    <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-arps-silver uppercase mb-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 live-pulse"></span>
+                        Telemetry Sync Active • Season 4 (2026)
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">ARPS Driver</h2>
+                        <span class="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-arps-accent font-tech text-xs font-bold">
+                            iRACING TELEMETRY
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-arps-silver mt-1 flex items-center gap-2">
+                        <span><i class="fa-solid fa-flag-checkered text-xs text-cyan-400"></i> Last Race: <strong>GT3 Sprint @ Spa-Francorchamps</strong></span>
+                        <span class="text-slate-600">•</span>
+                        <span class="text-emerald-400 font-semibold">P8 (+24 iR)</span>
+                    </p>
+                </div>
+
+                <!-- Driver Key Metric Badges Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
+                    <!-- Metric 1: Licence -->
+                    <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-xs text-arps-silver font-medium">Class Licence</div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="w-6 h-6 rounded bg-emerald-500/20 text-emerald-400 font-tech font-bold text-sm flex items-center justify-center border border-emerald-500/40">B</span>
+                            <span class="text-xl font-extrabold text-white font-tech">3.42</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Safety Rating</div>
+                    </div>
+
+                    <!-- Metric 2: Current iRating -->
+                    <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-12 h-12 bg-cyan-500/10 rounded-bl-full"></div>
+                        <div class="text-xs text-arps-silver font-medium">Current iRating</div>
+                        <div class="text-xl font-extrabold text-arps-accent font-tech mt-1 electric-text-glow" id="header-irating">
+                            974
+                        </div>
+                        <div class="text-[10px] text-emerald-400 font-medium mt-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> +174 this season
+                        </div>
+                    </div>
+
+                    <!-- Metric 3: Target iRating -->
+                    <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-xs text-arps-silver font-medium">Target iRating</div>
+                        <div class="text-xl font-extrabold text-amber-400 font-tech mt-1">
+                            1,500
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Development Goal</div>
+                    </div>
+
+                    <!-- Metric 4: Avg Finish -->
+                    <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-xs text-arps-silver font-medium">Avg Finish</div>
+                        <div class="text-xl font-extrabold text-white font-tech mt-1" id="header-avg-finish">
+                            P8.2
+                        </div>
+                        <div class="text-[10px] text-cyan-400 mt-0.5" id="header-pos-gained">+3.2 Positions Avg</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Development Progress (Milestone Track Bar) -->
+        <section class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-arps-accent"></i>
+                    <h3 class="font-tech text-base font-bold text-white tracking-wide uppercase">Development Progress</h3>
+                </div>
+                <div class="text-xs font-semibold text-arps-silver">
+                    Target Gap: <span class="text-arps-accent font-tech">526 iR</span> to Target (1,500)
+                </div>
+            </div>
+
+            <!-- Visual Bar Container -->
+            <div class="space-y-2">
+                <div class="relative w-full h-5 bg-slate-900/90 rounded-full p-1 border border-slate-800 overflow-visible">
+                    <!-- Progress Fill -->
+                    <div id="progress-fill" class="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-arps-accent rounded-full relative transition-all duration-1000 ease-out shadow-lg shadow-cyan-500/30" style="width: 7.9%;">
+                        <!-- Glow Tip -->
+                        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-cyan-400 shadow-[0_0_12px_#00f0ff]"></div>
+                    </div>
+                </div>
+
+                <!-- Milestone Scale Markers -->
+                <div class="grid grid-cols-6 text-center pt-2">
+                    <!-- 974 -->
+                    <div class="flex flex-col items-start">
+                        <span class="text-xs font-tech font-bold text-arps-accent flex items-center gap-1">
+                            974 <i class="fa-solid fa-caret-up text-cyan-400"></i>
+                        </span>
+                        <span class="text-[10px] font-semibold text-cyan-300 uppercase tracking-wider mt-0.5">Current</span>
+                    </div>
+
+                    <!-- 1,200 -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-tech font-semibold text-slate-400">1,200</span>
+                        <span class="text-[10px] text-slate-500 font-medium uppercase">Foundation</span>
+                    </div>
+
+                    <!-- 1,500 -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-tech font-bold text-amber-400">1,500</span>
+                        <span class="text-[10px] text-amber-400/80 font-medium uppercase">Target</span>
+                    </div>
+
+                    <!-- 2,000 -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-tech font-semibold text-slate-500">2,000</span>
+                        <span class="text-[10px] text-slate-600 font-medium uppercase">Competitive</span>
+                    </div>
+
+                    <!-- 2,500 -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-tech font-semibold text-slate-500">2,500</span>
+                        <span class="text-[10px] text-slate-600 font-medium uppercase">Advanced</span>
+                    </div>
+
+                    <!-- 3,000 -->
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs font-tech font-semibold text-slate-500">3,000</span>
+                        <span class="text-[10px] text-slate-600 font-medium uppercase">High Perf</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: The 6 Core KPIs Cards -->
+        <section class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="font-tech text-lg font-bold text-white tracking-wide uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-gauge-high text-cyan-400"></i>
+                    Core Performance KPIs
+                </h3>
+                <span class="text-xs text-arps-silver">Click any KPI card to inspect telemetry breakdown</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <!-- KPI 1: COMPETITIVE -->
+                <div onclick="openKpiModal('Competitive Performance', 'amber', 'Analysis of finishing consistency shows steady progress in lower-mid split fields. Strong grid advancement (+3.2 positions avg), but overall iRating gains are throttled by qualify placement.')" class="glass-card glass-card-hover rounded-xl p-5 cursor-pointer relative overflow-hidden group">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🏁</span>
+                            <h4 class="font-tech font-bold text-sm text-white tracking-wider">COMPETITIVE</h4>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> AMBER
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">iRating Target Progress</span>
+                            <span class="font-tech font-bold text-white">974 / 1,500</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Finishing Position (Avg)</span>
+                            <span class="font-tech font-semibold text-white">P8</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Positions Gained (Avg)</span>
+                            <span class="font-tech font-bold text-emerald-400">+3.2</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-arps-accent group-hover:translate-x-1 transition-transform">
+                        <span>View race result history</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 2: PACE -->
+                <div onclick="openKpiModal('Lap & Qualifying Pace', 'green', 'Optimal telemetry lap matching is at 101.4% against pro benchmarks. Theoretical best lap times demonstrate podium-capable raw speed when tires are in the optimum window.')" class="glass-card glass-card-hover rounded-xl p-5 cursor-pointer relative overflow-hidden group">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🏎️</span>
+                            <h4 class="font-tech font-bold text-sm text-white tracking-wider">PACE</h4>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> GREEN
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Lap Pace Index</span>
+                            <span class="font-tech font-bold text-emerald-400">101.4%</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Qualifying Position (Avg)</span>
+                            <span class="font-tech font-semibold text-white">P12</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Recent Best Lap</span>
+                            <span class="font-tech font-semibold text-arps-accent">2:18.420</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-arps-accent group-hover:translate-x-1 transition-transform">
+                        <span>View sector telemetry comparison</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 3: CONSISTENCY -->
+                <div onclick="openKpiModal('Stint Consistency', 'green', 'Excellent lap time grouping across stints. Lap variation of ±0.35s shows high muscle memory and repeatable braking points, minimizing tire degradation.')" class="glass-card glass-card-hover rounded-xl p-5 cursor-pointer relative overflow-hidden group">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🔄</span>
+                            <h4 class="font-tech font-bold text-sm text-white tracking-wider">CONSISTENCY</h4>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> GREEN
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Lap Variation</span>
+                            <span class="font-tech font-bold text-emerald-400">±0.35s</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Clean Laps %</span>
+                            <span class="font-tech font-semibold text-white">82%</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Long-Run Consistency</span>
+                            <span class="font-tech font-semibold text-cyan-300">High</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-arps-accent group-hover:translate-x-1 transition-transform">
+                        <span>View lap plot delta</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 4: RACECRAFT -->
+                <div onclick="openKpiModal('Racecraft & Wheel-to-Wheel', 'amber', 'Decisive overtakes during mid-stint phases, but defensive positioning into turn 1 leaves room for improvement against aggressive opponents.')" class="glass-card glass-card-hover rounded-xl p-5 cursor-pointer relative overflow-hidden group">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🥊</span>
+                            <h4 class="font-tech font-bold text-sm text-white tracking-wider">RACECRAFT</h4>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> AMBER
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Season Overtakes</span>
+                            <span class="font-tech font-bold text-white">14 Completed</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Defence Success</span>
+                            <span class="font-tech font-semibold text-emerald-400">88%</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Net Positions Gained</span>
+                            <span class="font-tech font-bold text-emerald-400">+18 Total</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-arps-accent group-hover:translate-x-1 transition-transform">
+                        <span>View overtake log</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 5: INCIDENTS -->
+                <div onclick="openKpiModal('Incident Management', 'red', 'CRITICAL FOCUS AREA: 6.2 incident points per race average is eroding Safety Rating and costing an estimated 12-18 iRating points per event in lost time or repairs.')" class="glass-card glass-card-hover rounded-xl p-5 cursor-pointer relative overflow-hidden group border-r-2 border-r-rose-500/50">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🚨</span>
+                            <h4 class="font-tech font-bold text-sm text-white tracking-wider">INCIDENTS</h4>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 live-pulse"></span> RED (FOCUS)
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Incidents / Race (Avg)</span>
+                            <span class="font-tech font-bold text-rose-400">6.2 inc</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Avoidable Incidents</span>
+                            <span class="font-tech font-semibold text-amber-400">2.1 avg</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">First-Lap Contact Rate</span>
+                            <span class="font-tech font-bold text-rose-400">1.4 inc</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-rose-400 group-hover:translate-x-1 transition-transform font-semibold">
+                        <span>View incident breakdown report</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 6: DEVELOPMENT -->
+                <div onclick="openKpiModal('Driver Development Commitment', 'green', 'Exceptional off-track dedication. 14.5 hours of practice weekly combined with 8 telemetry debriefs completed with coach.')" class="glass-card glass-card-hover rounded-xl p-5 cursor-pointer relative overflow-hidden group">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">📚</span>
+                            <h4 class="font-tech font-bold text-sm text-white tracking-wider">DEVELOPMENT</h4>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> GREEN
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Practice Hours / Wk</span>
+                            <span class="font-tech font-bold text-white">14.5 hrs</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Debriefs Completed</span>
+                            <span class="font-tech font-semibold text-arps-accent">8 Logged</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-arps-silver">Active Focus Skills</span>
+                            <span class="font-tech font-semibold text-emerald-400">Trail Braking</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-arps-accent group-hover:translate-x-1 transition-transform">
+                        <span>View coach notes & debriefs</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 4: Interactive Visual Telemetry Graphs -->
+        <section class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="font-tech text-lg font-bold text-white tracking-wide uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-arps-accent"></i>
+                    Telemetry & Performance Analytics
+                </h3>
+                <span class="text-xs text-arps-silver" id="timeframe-label">Showing Last 10 Races Data</span>
+            </div>
+
+            <!-- 2x3 Grid for 6 Charts -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                <!-- Chart 1: iRating Progression -->
+                <div class="glass-card rounded-xl p-4 flex flex-col h-72">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-tech font-bold text-white uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-trend-up text-cyan-400"></i> iRating Progression
+                        </h4>
+                        <span class="text-[10px] text-arps-accent font-tech font-bold">Target: 1,500</span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="chartIrating"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Average Finish vs Quali -->
+                <div class="glass-card rounded-xl p-4 flex flex-col h-72">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-tech font-bold text-white uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-trophy text-amber-400"></i> Quali vs Finish Position
+                        </h4>
+                        <span class="text-[10px] text-slate-400">Lower is better</span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="chartFinishQuali"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Incidents per Race -->
+                <div class="glass-card rounded-xl p-4 flex flex-col h-72">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-tech font-bold text-white uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Incidents Trend
+                        </h4>
+                        <span class="text-[10px] text-rose-400 font-semibold">Target: &lt; 4 inc</span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="chartIncidents"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Positions Gained/Lost -->
+                <div class="glass-card rounded-xl p-4 flex flex-col h-72">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-tech font-bold text-white uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-[#00f0ff] fa-right-left-long text-cyan-400"></i> Net Positions Gained
+                        </h4>
+                        <span class="text-[10px] text-emerald-400 font-bold">+18 Season Net</span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="chartPositionsGained"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 5: Lap Consistency -->
+                <div class="glass-card rounded-xl p-4 flex flex-col h-72">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-tech font-bold text-white uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-stopwatch text-emerald-400"></i> Lap Time Variance (s)
+                        </h4>
+                        <span class="text-[10px] text-emerald-400">±0.35s Avg</span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="chartConsistency"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 6: Pace Comparison -->
+                <div class="glass-card rounded-xl p-4 flex flex-col h-72">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-tech font-bold text-white uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Race vs Quali Pace Delta
+                        </h4>
+                        <span class="text-[10px] text-arps-silver">% Benchmark</span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="chartPaceComparison"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 5 & 6: ARPS Milestone Tracker & Current Development Focus -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- SECTION 5: Milestone Tracker (Vertical Timeline) - 5 cols -->
+            <section class="lg:col-span-5 glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-stairs text-arps-accent"></i>
+                        <h3 class="font-tech text-base font-bold text-white tracking-wide uppercase">ARPS Milestone Tracker</h3>
+                    </div>
+                    <span class="text-[10px] bg-slate-800 text-cyan-300 font-mono px-2 py-0.5 rounded border border-slate-700">
+                        INTERNAL FRAMEWORK
+                    </span>
+                </div>
+
+                <p class="text-xs text-arps-silver">
+                    Proprietary driver development tier system. Milestone advancement requires sustained iRating and Safety Rating criteria.
+                </p>
+
+                <!-- Vertical Ladder -->
+                <div class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
+
+                    <!-- Tier 1: Current -->
+                    <div class="relative flex items-center justify-between">
+                        <div class="absolute -left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border-2 border-arps-accent flex items-center justify-center shadow-[0_0_10px_#00f0ff]">
+                            <div class="w-2 h-2 rounded-full bg-arps-accent"></div>
+                        </div>
+                        <div>
+                            <div class="font-tech font-bold text-sm text-arps-accent flex items-center gap-2">
+                                974 <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/30 font-sans">CURRENT TIER</span>
+                            </div>
+                            <div class="text-xs font-semibold text-white">Entry Level Assessment</div>
+                        </div>
+                        <span class="text-xs font-tech text-cyan-400 font-bold">Active</span>
+                    </div>
+
+                    <!-- Tier 2: 1,200 Foundation -->
+                    <div class="relative flex items-center justify-between">
+                        <div class="absolute -left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border-2 border-slate-700 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-600"></div>
+                        </div>
+                        <div>
+                            <div class="font-tech font-bold text-sm text-slate-300">1,200</div>
+                            <div class="text-xs font-semibold text-slate-300">FOUNDATION</div>
+                        </div>
+                        <span class="text-[11px] text-slate-500 font-medium">+226 iR needed</span>
+                    </div>
+
+                    <!-- Tier 3: 1,500 Development (Target) -->
+                    <div class="relative flex items-center justify-between p-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                        <div class="absolute -left-[27px] top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border-2 border-amber-400 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+                        </div>
+                        <div>
+                            <div class="font-tech font-bold text-sm text-amber-400 flex items-center gap-2">
+                                1,500 <span class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-sans">SEASON GOAL</span>
+                            </div>
+                            <div class="text-xs font-semibold text-white">DEVELOPMENT TIER</div>
+                        </div>
+                        <span class="text-xs font-tech text-amber-400 font-bold">Target</span>
+                    </div>
+
+                    <!-- Tier 4: 2,000 Competitive -->
+                    <div class="relative flex items-center justify-between opacity-70">
+                        <div class="absolute -left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border-2 border-slate-800 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div>
+                        </div>
+                        <div>
+                            <div class="font-tech font-bold text-sm text-slate-400">2,000</div>
+                            <div class="text-xs font-semibold text-slate-400">COMPETITIVE</div>
+                        </div>
+                        <span class="text-[11px] text-slate-600">Locked</span>
+                    </div>
+
+                    <!-- Tier 5: 2,500 Advanced -->
+                    <div class="relative flex items-center justify-between opacity-50">
+                        <div class="absolute -left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border-2 border-slate-800 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+                        </div>
+                        <div>
+                            <div class="font-tech font-bold text-sm text-slate-500">2,500</div>
+                            <div class="text-xs font-semibold text-slate-500">ADVANCED</div>
+                        </div>
+                        <span class="text-[11px] text-slate-600">Locked</span>
+                    </div>
+
+                    <!-- Tier 6: 3,000 High Performance -->
+                    <div class="relative flex items-center justify-between opacity-40">
+                        <div class="absolute -left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border-2 border-slate-800 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+                        </div>
+                        <div>
+                            <div class="font-tech font-bold text-sm text-slate-500">3,000</div>
+                            <div class="text-xs font-semibold text-slate-500">HIGH PERFORMANCE</div>
+                        </div>
+                        <span class="text-[11px] text-slate-600">Pro Division</span>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- SECTION 6: Current Development Focus (Footer Dashboard Section) - 7 cols -->
+            <section class="lg:col-span-7 glass-card rounded-2xl p-5 sm:p-6 space-y-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-brain text-amber-400"></i>
+                            <h3 class="font-tech text-base font-bold text-white tracking-wide uppercase">Current Development Focus</h3>
+                        </div>
+                        <div class="text-xs text-arps-silver flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-contract text-cyan-400"></i>
+                            <span>Ref: <strong class="text-white font-mono">#DB-2026-0924</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Focus Cards -->
+                    <div class="space-y-3.5">
+                        <!-- Primary Priority (Danger/Amber Accent) -->
+                        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 px-3 py-1 bg-rose-500/20 text-rose-300 font-tech font-bold text-[10px] rounded-bl">
+                                PRIMARY PRIORITY
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm font-bold shrink-0 mt-0.5">
+                                    01
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white text-sm">Reduce Avoidable Incidents</h4>
+                                    <p class="text-xs text-slate-300 mt-1">
+                                        Target: Maintain <strong class="text-rose-400">&lt; 4 incidents per race</strong>. Primary cause identified as over-defending on cold tires during lap 1 & 2.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Secondary Priority -->
+                        <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 px-3 py-1 bg-amber-500/20 text-amber-300 font-tech font-bold text-[10px] rounded-bl">
+                                SECONDARY PRIORITY
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-bold shrink-0 mt-0.5">
+                                    02
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white text-sm">Improve Qualifying Consistency</h4>
+                                    <p class="text-xs text-slate-300 mt-1">
+                                        Optimize single-lap tire activation and brake temperature management on out-laps. Current quali gap averages +0.8s off optimal sector practice times.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Next Race Target -->
+                        <div class="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 px-3 py-1 bg-cyan-500/20 text-cyan-300 font-tech font-bold text-[10px] rounded-bl">
+                                NEXT RACE OBJECTIVE
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold shrink-0 mt-0.5">
+                                    03
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white text-sm">Clean Finish & Long-Run Pace Execution</h4>
+                                    <p class="text-xs text-slate-300 mt-1">
+                                        Achieve 0 first-lap contact incidents. Focus on consistent trail-braking pressure release through Turn 1 and bus-stop chicane.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Feed Debrief Sync -->
+                <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-arps-silver">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-arrows-rotate text-cyan-400 live-pulse"></i>
+                        Synced from ARPS Engineering Coach Console
+                    </span>
+                    <button onclick="alert('Debrief Document #DB-2026-0924:\n\nCoach Note: Great lap speed in sector 2 at Spa. Need to smooth out trail braking release on turn-in to reduce front scrub.')" class="text-arps-accent font-semibold hover:underline flex items-center gap-1">
+                        View Full Debrief Log <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Modal for KPI Drilldown Preview -->
+    <div id="kpi-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-lg rounded-2xl p-6 border border-slate-700 shadow-2xl relative space-y-4">
+            <button onclick="closeKpiModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div id="modal-status-badge" class="px-3 py-1 rounded-full text-xs font-tech font-bold uppercase">
+                    STATUS
+                </div>
+                <h3 id="modal-title" class="text-lg font-tech font-bold text-white">KPI Drilldown Analysis</h3>
+            </div>
+
+            <p id="modal-description" class="text-sm text-slate-300 leading-relaxed">
+                Telemetry breakdown details...
+            </p>
+
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div class="text-xs font-tech font-bold text-arps-accent uppercase">Engineers Recommendation</div>
+                <div id="modal-recommendation" class="text-xs text-slate-400">
+                    Maintain focus on throttle application timing exiting slow-speed corners.
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeKpiModal()" class="px-4 py-2 rounded-lg bg-arps-accent text-slate-950 font-bold text-xs font-tech hover:bg-cyan-300 transition-colors">
+                    CLOSE TELEMETRY PREVIEW
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Stores for Timeframe Switching
+        const datasets = {
+            '5': {
+                labels: ['R1', 'R2', 'R3', 'R4', 'R5'],
+                irating: [910, 925, 940, 950, 974],
+                finish: [12, 9, 7, 10, 8],
+                quali: [14, 11, 10, 12, 12],
+                incidents: [8, 5, 4, 7, 6],
+                posGained: [+2, +2, +3, +2, +4],
+                consistency: [0.48, 0.42, 0.38, 0.39, 0.35],
+                racePace: [102.1, 101.9, 101.6, 101.8, 101.4],
+                qualiPace: [101.8, 101.5, 101.2, 101.5, 101.1],
+                headerAvgFinish: 'P9.2',
+                headerPosGained: '+2.6 Positions Avg'
+            },
+            '10': {
+                labels: ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10'],
+                irating: [800, 820, 845, 860, 890, 910, 925, 940, 950, 974],
+                finish: [15, 14, 11, 13, 9, 12, 9, 7, 10, 8],
+                quali: [16, 15, 13, 14, 12, 14, 11, 10, 12, 12],
+                incidents: [10, 9, 7, 8, 6, 8, 5, 4, 7, 6],
+                posGained: [+1, +1, +2, +1, +3, +2, +2, +3, +2, +4],
+                consistency: [0.62, 0.58, 0.51, 0.49, 0.45, 0.48, 0.42, 0.38, 0.39, 0.35],
+                racePace: [103.2, 102.8, 102.5, 102.3, 102.0, 102.1, 101.9, 101.6, 101.8, 101.4],
+                qualiPace: [102.9, 102.4, 102.1, 102.0, 101.7, 101.8, 101.5, 101.2, 101.5, 101.1],
+                headerAvgFinish: 'P8.2',
+                headerPosGained: '+3.2 Positions Avg'
+            },
+            'season': {
+                labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12'],
+                irating: [750, 780, 800, 820, 845, 860, 880, 890, 910, 930, 950, 974],
+                finish: [16, 14, 15, 12, 11, 13, 10, 9, 11, 8, 9, 8],
+                quali: [18, 16, 15, 13, 14, 12, 12, 11, 13, 10, 11, 12],
+                incidents: [12, 11, 10, 9, 8, 7, 8, 6, 7, 5, 6, 6],
+                posGained: [+2, +2, +0, +1, +3, -1, +2, +2, +2, +2, +2, +4],
+                consistency: [0.70, 0.65, 0.60, 0.55, 0.50, 0.48, 0.45, 0.42, 0.40, 0.37, 0.36, 0.35],
+                racePace: [104.0, 103.5, 103.0, 102.6, 102.2, 102.1, 102.0, 101.8, 101.7, 101.5, 101.5, 101.4],
+                qualiPace: [103.8, 103.1, 102.8, 102.2, 101.9, 101.8, 101.6, 101.4, 101.3, 101.1, 101.2, 101.1],
+                headerAvgFinish: 'P10.1',
+                headerPosGained: '+1.8 Positions Avg'
+            }
+        };
+
+        let chartInstances = {};
+
+        // Chart Initialization Settings
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter';
+
+        function initCharts(timeframeKey = '10') {
+            const data = datasets[timeframeKey];
+
+            // Destroy existing charts if reloading
+            Object.keys(chartInstances).forEach(key => {
+                if (chartInstances[key]) chartInstances[key].destroy();
+            });
+
+            // Common Options
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#131e3a',
+                        titleColor: '#00f0ff',
+                        bodyColor: '#f8fafc',
+                        borderColor: '#1e293b',
+                        borderWidth: 1,
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { font: { size: 10 } } }
+                }
+            };
+
+            // 1. iRating Progression Chart
+            const ctxIrating = document.getElementById('chartIrating').getContext('2d');
+            const gradIr = ctxIrating.createLinearGradient(0, 0, 0, 200);
+            gradIr.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
+            gradIr.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+
+            chartInstances.irating = new Chart(ctxIrating, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'iRating',
+                        data: data.irating,
+                        borderColor: '#00f0ff',
+                        borderWidth: 2.5,
+                        backgroundColor: gradIr,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#00f0ff'
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: { ...commonOptions.scales.y, min: 700 }
+                    }
+                }
+            });
+
+            // 2. Finish vs Quali Chart
+            const ctxFQ = document.getElementById('chartFinishQuali').getContext('2d');
+            chartInstances.finishQuali = new Chart(ctxFQ, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Quali Position',
+                            data: data.quali,
+                            backgroundColor: 'rgba(148, 163, 184, 0.3)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Finish Position',
+                            data: data.finish,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: { ...commonOptions.plugins, legend: { display: true, labels: { boxWidth: 12, font: { size: 10 } } } },
+                    scales: {
+                        ...commonOptions.scales,
+                        y: { ...commonOptions.scales.y, reverse: true, min: 1 }
+                    }
+                }
+            });
+
+            // 3. Incidents Chart
+            const ctxInc = document.getElementById('chartIncidents').getContext('2d');
+            chartInstances.incidents = new Chart(ctxInc, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Incidents',
+                        data: data.incidents,
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ef4444'
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: { ...commonOptions.scales.y, min: 0, max: 15 }
+                    }
+                }
+            });
+
+            // 4. Positions Gained Chart
+            const ctxPos = document.getElementById('chartPositionsGained').getContext('2d');
+            chartInstances.posGained = new Chart(ctxPos, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Net Gained',
+                        data: data.posGained,
+                        backgroundColor: data.posGained.map(v => v >= 0 ? '#10b981' : '#ef4444'),
+                        borderRadius: 4
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // 5. Lap Consistency Chart
+            const ctxCons = document.getElementById('chartConsistency').getContext('2d');
+            chartInstances.consistency = new Chart(ctxCons, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Variance (s)',
+                        data: data.consistency,
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 3
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // 6. Pace Comparison Chart
+            const ctxPace = document.getElementById('chartPaceComparison').getContext('2d');
+            chartInstances.pace = new Chart(ctxPace, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Race Pace %',
+                            data: data.racePace,
+                            borderColor: '#0284c7',
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Quali Pace %',
+                            data: data.qualiPace,
+                            borderColor: '#f59e0b',
+                            borderWidth: 2,
+                            borderDash: [4, 4],
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: { ...commonOptions.plugins, legend: { display: true, labels: { boxWidth: 12, font: { size: 10 } } } }
+                }
+            });
+        }
+
+        function setTimeframe(key) {
+            // Update UI Button Styles
+            document.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.className = 'timeframe-btn px-3 py-1.5 rounded-md font-medium transition-all text-slate-400 hover:text-white';
+            });
+            const activeBtn = document.getElementById(`filter-${key}`);
+            if (activeBtn) {
+                activeBtn.className = 'timeframe-btn px-3 py-1.5 rounded-md font-medium transition-all bg-arps-accent text-slate-950 font-semibold shadow-md shadow-cyan-500/20';
+            }
+
+            // Update Label
+            const labelMap = { '5': 'Last 5 Races', '10': 'Last 10 Races', 'season': 'Full Season 4' };
+            document.getElementById('timeframe-label').innerText = `Showing ${labelMap[key]} Data`;
+
+            // Update Header Stats Dynamic Text
+            document.getElementById('header-avg-finish').innerText = datasets[key].headerAvgFinish;
+            document.getElementById('header-pos-gained').innerText = datasets[key].headerPosGained;
+
+            // Re-render Charts
+            initCharts(key);
+        }
+
+        function openKpiModal(title, statusColor, description) {
+            const modal = document.getElementById('kpi-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalStatus = document.getElementById('modal-status-badge');
+            const modalDesc = document.getElementById('modal-description');
+
+            modalTitle.innerText = title;
+            modalDesc.innerText = description;
+
+            if (statusColor === 'green') {
+                modalStatus.className = 'px-3 py-1 rounded-full text-xs font-tech font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                modalStatus.innerText = 'STATUS: ON TARGET';
+            } else if (statusColor === 'amber') {
+                modalStatus.className = 'px-3 py-1 rounded-full text-xs font-tech font-bold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                modalStatus.innerText = 'STATUS: ATTENTION';
+            } else {
+                modalStatus.className = 'px-3 py-1 rounded-full text-xs font-tech font-bold uppercase bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                modalStatus.innerText = 'STATUS: CRITICAL FOCUS';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeKpiModal() {
+            document.getElementById('kpi-modal').classList.add('hidden');
+        }
+
+        // Initialize on Window Load
+        window.onload = function() {
+            initCharts('10');
+            
+            // Animate progress bar fill smoothly
+            setTimeout(() => {
+                const fill = document.getElementById('progress-fill');
+                if(fill) {
+                    // 974 / 3000 * 100 = ~32.4% on full scale
+                    fill.style.width = '32.4%';
+                }
+            }, 300);
+        };
+    </script>
+</body>
+</html>
