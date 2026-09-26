@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARPS MOTORSPORT - Post-Race Debrief & Telemetry System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Orbitron -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        arps: {
+                            navy: '#0b132b',
+                            card: '#131e3a',
+                            cardBorder: '#1e293b',
+                            accent: '#00f0ff',
+                            accentGlow: 'rgba(0, 240, 255, 0.25)',
+                            electric: '#0284c7',
+                            silver: '#94a3b8',
+                            danger: '#ef4444',
+                            warning: '#f59e0b',
+                            success: '#10b981',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Orbitron', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b132b;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.15), transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(0, 240, 255, 0.06), transparent 35%);
+            background-attachment: fixed;
+        }
+
+        .font-tech {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(19, 30, 58, 0.8);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-input {
+            background: rgba(11, 19, 43, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .glass-input:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+            outline: none;
+        }
+
+        .electric-glow {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .electric-text-glow {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b132b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+
+        /* Live Pulse Animation */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.08); }
+        }
+        .live-pulse {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Custom Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #00f0ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px #00f0ff;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #1e293b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16 text-slate-100">
+
+    <!-- Top Header & Navigation Bar -->
+    <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-tech font-bold text-slate-950 text-xl shadow-lg shadow-cyan-500/20">
+                    A
+                </div>
+                <div>
+                    <h1 class="font-tech font-bold text-lg sm:text-xl tracking-wider text-white flex items-center gap-2">
+                        <span>ARPS</span>
+                        <span class="text-arps-accent text-xs px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 font-sans">DEBRIEF SYSTEM</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Main App Nav Toggles -->
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs sm:text-sm">
+                <button onclick="switchTab('log-session')" id="nav-btn-log" class="nav-tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all bg-arps-accent text-slate-950 font-semibold shadow-md shadow-cyan-500/20 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                    <span>Log New Session</span>
+                </button>
+                <button onclick="switchTab('debrief-history')" id="nav-btn-history" class="nav-tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    <span>Debrief History</span>
+                    <span id="debrief-count-badge" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-arps-accent text-[10px] font-bold">3</span>
+                </button>
+                <button onclick="switchTab('telemetry-summary')" id="nav-btn-summary" class="nav-tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-xs"></i>
+                    <span>Telemetry Summary</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+
+        <!-- Top Driver Telemetry Chip -->
+        <section class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-arps-accent">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-cyan-400 text-lg shadow-inner">
+                    <i class="fa-solid fa-helmet-safety"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-white font-tech">ARPS Driver</span>
+                        <span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 text-[10px] font-semibold">
+                            Single-Seater / GT3
+                        </span>
+                    </div>
+                    <p class="text-xs text-arps-silver mt-0.5">
+                        Current Status: <strong class="text-white font-tech">974 iR</strong> → Target: <strong class="text-amber-400 font-tech">1,500 iR</strong> | Safety Rating: <strong class="text-emerald-400 font-tech">B 3.42</strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs">
+                <button onclick="exportDebriefData()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-download text-arps-accent"></i> Export Data (JSON)
+                </button>
+                <button onclick="resetDefaultData()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-rose-400 font-medium transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate text-xs"></i> Reset Sample Data
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 1: LOG NEW SESSION FORM -->
+        <div id="tab-log-session" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column: 5-Section Debrief Form (8 Cols) -->
+                <div class="lg:col-span-8 space-y-6">
+
+                    <!-- Toast Notification Banner -->
+                    <div id="toast-banner" class="hidden glass-card border-l-4 border-l-emerald-500 p-4 rounded-xl flex items-center justify-between text-xs text-emerald-300">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-base text-emerald-400"></i>
+                            <span id="toast-message">Session debrief successfully saved and pushed to Homepage Telemetry.</span>
+                        </div>
+                        <button onclick="hideToast()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <form id="debrief-form" onsubmit="handleDebriefSubmit(event)" class="space-y-6">
+
+                        <!-- SECTION A: Session & Track Metadata -->
+                        <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 font-tech font-bold text-xs flex items-center justify-center border border-cyan-500/30">A</span>
+                                    <h3 class="font-tech text-sm sm:text-base font-bold text-white tracking-wide uppercase">Session & Track Metadata</h3>
+                                </div>
+                                <span class="text-[10px] text-arps-silver">Step 1 of 5</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                                <!-- Date -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Session Date</label>
+                                    <input type="date" id="input-date" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs">
+                                </div>
+
+                                <!-- Track Selection -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Circuit / Track</label>
+                                    <select id="input-track" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs bg-slate-900">
+                                        <option value="Spa-Francorchamps">Circuit de Spa-Francorchamps</option>
+                                        <option value="Brands Hatch">Brands Hatch (GP)</option>
+                                        <option value="Silverstone">Silverstone Circuit (GP)</option>
+                                        <option value="Nürburgring">Nürburgring GP</option>
+                                        <option value="Oulton Park">Oulton Park (International)</option>
+                                        <option value="Monza">Autodromo Nazionale Monza</option>
+                                        <option value="Donington Park">Donington Park (GP)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Car / Series -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Car / Series Category</label>
+                                    <select id="input-car" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs bg-slate-900">
+                                        <option value="GT3 Sprint">GT3 Challenge (Ferrari 296 GT3)</option>
+                                        <option value="FIA F4">FIA Formula 4 Series</option>
+                                        <option value="Ray FF1600">Ray FF1600 Championship</option>
+                                        <option value="Porsche Cup">Porsche 911 GT3 Cup (992)</option>
+                                        <option value="LMP2">LMP2 Prototype Sprint</option>
+                                    </select>
+                                </div>
+
+                                <!-- Layout / Session Type -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Session Type</label>
+                                    <select id="input-session-type" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs bg-slate-900">
+                                        <option value="Official Race">Official Race</option>
+                                        <option value="League Race">League / Championship Race</option>
+                                        <option value="Official Qualifying">Official Qualifying</option>
+                                        <option value="Practice Session">Telemetry Practice Session</option>
+                                    </select>
+                                </div>
+
+                                <!-- Track Temp -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Track Temp (°C)</label>
+                                    <input type="number" id="input-track-temp" value="28" min="5" max="60" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs">
+                                </div>
+
+                                <!-- Track State -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Track Usage State</label>
+                                    <select id="input-track-state" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs bg-slate-900">
+                                        <option value="Fast (Heavy Rubber)">Fast (Heavy Rubber)</option>
+                                        <option value="Medium Usage">Medium Usage</option>
+                                        <option value="Green / Low Grip">Green / Low Grip</option>
+                                        <option value="Wet / Damp">Wet / Damp</option>
+                                    </select>
+                                </div>
+
+                                <!-- Grid & Field Size -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Qualifying Position</label>
+                                    <input type="number" id="input-quali" value="12" min="1" max="60" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Finishing Position</label>
+                                    <input type="number" id="input-finish" value="8" min="1" max="60" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs">
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- SECTION B: iRating & Safety Rating Impact -->
+                        <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 font-tech font-bold text-xs flex items-center justify-center border border-cyan-500/30">B</span>
+                                    <h3 class="font-tech text-sm sm:text-base font-bold text-white tracking-wide uppercase">iRating & Safety Rating Impact</h3>
+                                </div>
+                                <span class="text-[10px] text-arps-silver">Step 2 of 5</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                                <!-- Starting iRating -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Starting iRating</label>
+                                    <input type="number" id="input-start-ir" value="950" min="100" max="10000" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                                <!-- iRating Change -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">iRating Delta (+/-)</label>
+                                    <input type="number" id="input-ir-delta" value="24" step="1" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-emerald-400">
+                                </div>
+
+                                <!-- New iRating (Auto Calc) -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">New iRating (Auto)</label>
+                                    <div id="calc-new-ir" class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-arps-accent bg-slate-950/60 flex items-center justify-between">
+                                        <span>974</span>
+                                        <i class="fa-solid fa-lock text-[10px] text-slate-600"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Starting SR -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Starting SR (e.g. 3.32)</label>
+                                    <input type="number" id="input-start-sr" value="3.32" step="0.01" min="0.00" max="4.99" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                                <!-- SR Delta -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">SR Delta (+/-)</label>
+                                    <input type="number" id="input-sr-delta" value="0.10" step="0.01" min="-1.00" max="1.00" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-emerald-400">
+                                </div>
+
+                                <!-- Calculated Positions Gained -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Position Net Delta</label>
+                                    <div id="calc-pos-gained" class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-emerald-400 bg-slate-950/60 flex items-center justify-between">
+                                        <span>+4 Positions</span>
+                                        <i class="fa-solid fa-arrow-up-long"></i>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- SECTION C: Pace & Telemetry Metrics -->
+                        <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 font-tech font-bold text-xs flex items-center justify-center border border-cyan-500/30">C</span>
+                                    <h3 class="font-tech text-sm sm:text-base font-bold text-white tracking-wide uppercase">Pace & Telemetry Metrics</h3>
+                                </div>
+                                <span class="text-[10px] text-arps-silver">Step 3 of 5</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                                <!-- Best Lap Time -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Best Session Lap (mm:ss.sss)</label>
+                                    <input type="text" id="input-best-lap" value="2:18.420" placeholder="2:18.420" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                                <!-- Optimal / Ideal Lap -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Optimal / Ideal Lap (mm:ss.sss)</label>
+                                    <input type="text" id="input-optimal-lap" value="2:18.078" placeholder="2:18.078" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                                <!-- Auto Delta to Optimal -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Delta to Optimal</label>
+                                    <div id="calc-optimal-delta" class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-amber-400 bg-slate-950/60 flex items-center justify-between">
+                                        <span>+0.342s</span>
+                                        <i class="fa-solid fa-stopwatch text-slate-500"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Average Pace -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Average Stint Lap Pace</label>
+                                    <input type="text" id="input-avg-pace" value="2:19.105" placeholder="2:19.105" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                                <!-- Consistency Level -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Stint Consistency Grade</label>
+                                    <select id="input-consistency" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs bg-slate-900 font-medium text-emerald-400">
+                                        <option value="High (±0.35s)">High (±0.35s - Excellent)</option>
+                                        <option value="Medium (±0.70s)">Medium (±0.70s - Moderate)</option>
+                                        <option value="Low (±1.20s+)">Low (±1.20s+ - Inconsistent)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Fuel / Compound -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Fuel & Tire Compound</label>
+                                    <input type="text" id="input-fuel-tire" value="45L / Medium Dry" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs">
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- SECTION D: Racecraft & Incidents Breakdown -->
+                        <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 font-tech font-bold text-xs flex items-center justify-center border border-cyan-500/30">D</span>
+                                    <h3 class="font-tech text-sm sm:text-base font-bold text-white tracking-wide uppercase">Racecraft & Incidents Breakdown</h3>
+                                </div>
+                                <span class="text-[10px] text-arps-silver">Step 4 of 5</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                                <!-- Total Incidents -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Total Incidents (x Inc)</label>
+                                    <input type="number" id="input-incidents" value="6" min="0" max="25" oninput="calculateRealtimeMetrics()" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-rose-400">
+                                </div>
+
+                                <!-- First Lap Position Delta -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Lap 1 Net Change (+/-)</label>
+                                    <input type="number" id="input-lap1-delta" value="2" min="-20" max="20" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                                <!-- Overtakes Completed -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Overtakes Completed</label>
+                                    <input type="number" id="input-overtakes" value="3" min="0" max="30" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                                <!-- Defensive Moves Held -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-arps-silver mb-1">Defensive Positions Maintained</label>
+                                    <input type="number" id="input-defence" value="2" min="0" max="30" required class="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech">
+                                </div>
+
+                            </div>
+
+                            <!-- Incident Categorization Matrix -->
+                            <div class="pt-2 border-t border-slate-800/80">
+                                <label class="block text-xs font-semibold text-arps-silver mb-2">Primary Incident Cause Classification</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-cyan-500/40">
+                                        <input type="radio" name="incident-category" value="Avoidable Contact" checked class="accent-cyan-400">
+                                        <span class="text-slate-300">Avoidable Contact</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-cyan-500/40">
+                                        <input type="radio" name="incident-category" value="Unforced Off-Track" class="accent-cyan-400">
+                                        <span class="text-slate-300">Unforced Off-Track</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-cyan-500/40">
+                                        <input type="radio" name="incident-category" value="Racing Incident" class="accent-cyan-400">
+                                        <span class="text-slate-300">Racing Incident</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-cyan-500/40">
+                                        <input type="radio" name="incident-category" value="Netcode / Lag" class="accent-cyan-400">
+                                        <span class="text-slate-300">Netcode / Lag</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION E: Qualitative Driver & Telemetry Debrief -->
+                        <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 font-tech font-bold text-xs flex items-center justify-center border border-cyan-500/30">E</span>
+                                    <h3 class="font-tech text-sm sm:text-base font-bold text-white tracking-wide uppercase">Qualitative Driver & Telemetry Debrief</h3>
+                                </div>
+                                <span class="text-[10px] text-arps-silver">Step 5 of 5</span>
+                            </div>
+
+                            <!-- Mental Focus & Readiness Slider -->
+                            <div class="bg-slate-900/70 p-4 rounded-xl border border-slate-800 space-y-2">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="font-semibold text-white">Mental Readiness & Focus Score</span>
+                                    <span id="slider-focus-val" class="font-tech font-bold text-arps-accent text-sm">8 / 10</span>
+                                </div>
+                                <input type="range" id="input-focus-score" min="1" max="10" value="8" oninput="document.getElementById('slider-focus-val').innerText = this.value + ' / 10'" class="w-full">
+                                <div class="flex justify-between text-[10px] text-slate-500">
+                                    <span>1 - Unfocused / Fatigued</span>
+                                    <span>5 - Moderate</span>
+                                    <span>10 - Locked In / Peak State</span>
+                                </div>
+                            </div>
+
+                            <!-- Positives -->
+                            <div>
+                                <label class="block text-xs font-semibold text-arps-silver mb-1">Key Positives / What Went Well</label>
+                                <textarea id="input-positives" rows="2" required class="w-full glass-input rounded-xl p-3 text-xs" placeholder="Strong race pace through Sector 2; decisive lap 4 overtake into Les Combes."></textarea>
+                            </div>
+
+                            <!-- Telemetry Focus / Left on Track -->
+                            <div>
+                                <label class="block text-xs font-semibold text-arps-silver mb-1">Telemetry Focus & Time Left On Track</label>
+                                <textarea id="input-telemetry-focus" rows="2" required class="w-full glass-input rounded-xl p-3 text-xs" placeholder="Trail braking release too abrupt into T1; scrubbing front tires on entry. Need smoother transition."></textarea>
+                            </div>
+
+                            <!-- Next Action Items -->
+                            <div>
+                                <label class="block text-xs font-semibold text-arps-silver mb-1">Action Items for Next Session</label>
+                                <textarea id="input-action-items" rows="2" required class="w-full glass-input rounded-xl p-3 text-xs" placeholder="30 min practice drill: Cold tire braking points into T1 & bus stop chicane with 100% fuel load."></textarea>
+                            </div>
+
+                            <!-- Submit Action Button -->
+                            <div class="pt-4 flex items-center justify-end gap-3">
+                                <button type="button" onclick="resetForm()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors">
+                                    Clear Form
+                                </button>
+                                <button type="submit" class="px-6 py-2.5 rounded-xl bg-arps-accent hover:bg-cyan-300 text-slate-950 font-tech font-bold text-xs shadow-lg shadow-cyan-500/30 transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    SAVE & PUSH DEBRIEF TO HOMEPAGE
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Right Column: Live Calculation Engine & Homepage Preview (4 Cols) -->
+                <div class="lg:col-span-4 space-y-6">
+
+                    <!-- Live Telemetry Calculation Box -->
+                    <div class="glass-card rounded-2xl p-5 space-y-4 sticky top-20 border-t-2 border-t-arps-accent">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h4 class="font-tech text-xs font-bold text-white uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-calculator text-arps-accent"></i>
+                                Live Telemetry Impact
+                            </h4>
+                            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 live-pulse"></span>
+                        </div>
+
+                        <!-- Computed Metric Chips -->
+                        <div class="space-y-3">
+
+                            <!-- Incident Risk Rating -->
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <div class="text-[11px] text-arps-silver">Incident Risk Severity</div>
+                                    <div id="calc-risk-rating" class="font-tech font-bold text-sm text-amber-400 mt-0.5">MODERATE RISK</div>
+                                </div>
+                                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-tech text-xs font-bold border border-amber-500/20">
+                                    !
+                                </span>
+                            </div>
+
+                            <!-- Net Grid Delta -->
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <div class="text-[11px] text-arps-silver">Race Grid Net Gain</div>
+                                    <div id="preview-grid-delta" class="font-tech font-bold text-sm text-emerald-400 mt-0.5">+4 Positions</div>
+                                </div>
+                                <span class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-tech text-xs font-bold border border-emerald-500/20">
+                                    <i class="fa-solid fa-arrow-up"></i>
+                                </span>
+                            </div>
+
+                            <!-- Updated iRating Prediction -->
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <div class="text-[11px] text-arps-silver">Homepage iRating Sync</div>
+                                    <div id="preview-ir-sync" class="font-tech font-bold text-sm text-arps-accent mt-0.5">974 iR (+24)</div>
+                                </div>
+                                <span class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-tech text-xs font-bold border border-cyan-500/20">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <!-- 6 Core Homepage Pillar Impact Preview -->
+                        <div class="pt-3 border-t border-slate-800 space-y-2">
+                            <div class="text-xs font-tech font-bold text-white uppercase tracking-wider">
+                                Projected Homepage KPI Updates
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 text-[11px]">
+
+                                <!-- Competitive -->
+                                <div class="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <span class="text-slate-400">🏁 Competitive</span>
+                                    <span id="kpi-impact-comp" class="text-emerald-400 font-bold">▲ Up</span>
+                                </div>
+
+                                <!-- Pace -->
+                                <div class="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <span class="text-slate-400">🏎️ Pace</span>
+                                    <span id="kpi-impact-pace" class="text-emerald-400 font-bold">▲ Up</span>
+                                </div>
+
+                                <!-- Consistency -->
+                                <div class="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <span class="text-slate-400">🔄 Consistency</span>
+                                    <span id="kpi-impact-cons" class="text-emerald-400 font-bold">Stable</span>
+                                </div>
+
+                                <!-- Racecraft -->
+                                <div class="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <span class="text-slate-400">🥊 Racecraft</span>
+                                    <span id="kpi-impact-racecraft" class="text-emerald-400 font-bold">▲ Up</span>
+                                </div>
+
+                                <!-- Incidents -->
+                                <div class="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between col-span-2">
+                                    <span class="text-slate-400">🚨 Incident Status</span>
+                                    <span id="kpi-impact-inc" class="text-rose-400 font-bold">Attention Needed (6 inc)</span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Debrief Coach Auto Recommendation -->
+                        <div class="bg-cyan-950/40 p-3 rounded-xl border border-cyan-500/20 space-y-1">
+                            <div class="text-[10px] text-cyan-400 font-tech font-bold uppercase flex items-center gap-1">
+                                <i class="fa-solid fa-robot"></i> System Insight
+                            </div>
+                            <p class="text-[11px] text-slate-300 italic leading-snug">
+                                "Strong position gain (+4), but 6 incidents in 12 laps indicates cold-tire instability. Focus next drill on out-lap braking markers."
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: DEBRIEF HISTORY & PAST LOGS -->
+        <div id="tab-debrief-history" class="hidden space-y-5">
+
+            <!-- Search & Filter Controls -->
+            <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="relative w-full sm:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="search-history" onkeyup="filterDebriefHistory()" placeholder="Search track, car, notes..." class="w-full glass-input rounded-xl pl-9 pr-3 py-2 text-xs">
+                </div>
+
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <select id="filter-track" onchange="filterDebriefHistory()" class="glass-input rounded-xl px-3 py-2 text-xs bg-slate-900">
+                        <option value="ALL">All Tracks</option>
+                        <option value="Spa-Francorchamps">Spa-Francorchamps</option>
+                        <option value="Brands Hatch">Brands Hatch</option>
+                        <option value="Monza">Monza</option>
+                    </select>
+
+                    <select id="filter-incident" onchange="filterDebriefHistory()" class="glass-input rounded-xl px-3 py-2 text-xs bg-slate-900">
+                        <option value="ALL">All Incident Levels</option>
+                        <option value="CLEAN">Clean (&lt; 4 inc)</option>
+                        <option value="HIGH">High Incidents (6+ inc)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- History Cards List Grid -->
+            <div id="debrief-history-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Dynamically populated via Javascript -->
+            </div>
+
+        </div>
+
+        <!-- TAB 3: TELEMETRY SUMMARY ANALYTICS -->
+        <div id="tab-telemetry-summary" class="hidden space-y-6">
+            <div class="glass-card rounded-2xl p-6 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="font-tech text-lg font-bold text-white uppercase">ARPS Telemetry Debrief Summary</h3>
+                        <p class="text-xs text-arps-silver mt-0.5">Aggregated metrics from all logged driver debrief sessions</p>
+                    </div>
+                    <span class="px-3 py-1 bg-cyan-950 text-arps-accent border border-cyan-500/30 rounded-full text-xs font-tech font-bold">
+                        3 SESSIONS LOGGED
+                    </span>
+                </div>
+
+                <!-- Aggregated Summary Metric Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                        <div class="text-xs text-arps-silver">Avg Position Delta</div>
+                        <div class="text-xl font-tech font-bold text-emerald-400 mt-1">+3.0 Positions</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Consistent Grid Climber</div>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                        <div class="text-xs text-arps-silver">Avg Delta to Optimal</div>
+                        <div class="text-xl font-tech font-bold text-amber-400 mt-1">+0.384s</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Theoretical Best Gap</div>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                        <div class="text-xs text-arps-silver">Avg Incidents / Race</div>
+                        <div class="text-xl font-tech font-bold text-rose-400 mt-1">5.3 inc</div>
+                        <div class="text-[10px] text-rose-400/80 mt-0.5">Priority Focus Area</div>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                        <div class="text-xs text-arps-silver">Avg Mental Focus Score</div>
+                        <div class="text-xl font-tech font-bold text-arps-accent mt-1">8.2 / 10</div>
+                        <div class="text-[10px] text-emerald-400 mt-0.5">High Driver Readiness</div>
+                    </div>
+                </div>
+
+                <!-- Key Telemetry Action Item Matrix -->
+                <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-800 space-y-3">
+                    <h4 class="font-tech text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-cyan-400"></i> Active Engineering Action Matrix
+                    </h4>
+                    <div class="space-y-2 text-xs">
+                        <div class="p-3 rounded-lg bg-slate-950 border-l-2 border-l-amber-400 flex items-start justify-between">
+                            <div>
+                                <span class="font-bold text-white">Trail Braking Release Transition</span>
+                                <p class="text-slate-400 mt-0.5">Scrubbing front tires on T1 entries at Spa and Brands Hatch. Work on smooth pedal bleed.</p>
+                            </div>
+                            <span class="text-[10px] font-tech text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded">IN PROGRESS</span>
+                        </div>
+
+                        <div class="p-3 rounded-lg bg-slate-950 border-l-2 border-l-emerald-400 flex items-start justify-between">
+                            <div>
+                                <span class="font-bold text-white">Mid-Stint Long Run Consistency</span>
+                                <p class="text-slate-400 mt-0.5">High lap consistency maintained across 15-lap stints in Ray FF1600.</p>
+                            </div>
+                            <span class="text-[10px] font-tech text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">MAINTAINED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Full Debrief View Modal -->
+    <div id="debrief-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 border border-slate-700 shadow-2xl relative space-y-5">
+            <button onclick="closeDebriefModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span id="modal-car-badge" class="px-2.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 text-[10px] font-tech font-bold uppercase">
+                        GT3 SPRINT
+                    </span>
+                    <span id="modal-date" class="text-xs text-arps-silver">2026-09-24</span>
+                </div>
+                <h3 id="modal-track-title" class="text-xl font-tech font-bold text-white mt-1">Circuit de Spa-Francorchamps</h3>
+            </div>
+
+            <!-- Modal Content Grid -->
+            <div id="modal-content-body" class="space-y-4 text-xs">
+                <!-- Dynamically rendered via JS -->
+            </div>
+
+            <div class="flex justify-end pt-3 border-t border-slate-800">
+                <button onclick="closeDebriefModal()" class="px-5 py-2 rounded-xl bg-arps-accent text-slate-950 font-tech font-bold text-xs hover:bg-cyan-300 transition-colors">
+                    CLOSE DEBRIEF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Sample Pre-populated Race Debrief Logs
+        const defaultDebriefs = [
+            {
+                id: 'DB-2026-001',
+                date: '2026-09-24',
+                track: 'Spa-Francorchamps',
+                car: 'GT3 Sprint',
+                sessionType: 'Official Race',
+                trackTemp: 28,
+                trackState: 'Fast (Heavy Rubber)',
+                quali: 12,
+                finish: 8,
+                startIr: 950,
+                irDelta: 24,
+                newIr: 974,
+                startSr: 3.32,
+                srDelta: 0.10,
+                newSr: 3.42,
+                posGained: 4,
+                bestLap: '2:18.420',
+                optimalLap: '2:18.078',
+                optimalDelta: '+0.342s',
+                avgPace: '2:19.105',
+                consistency: 'High (±0.35s)',
+                fuelTire: '45L / Medium Dry',
+                incidents: 6,
+                lap1Delta: 2,
+                overtakes: 3,
+                defence: 2,
+                incidentCategory: 'Avoidable Contact',
+                focusScore: 8,
+                positives: 'Strong race pace through Sector 2; decisive lap 4 overtake into Les Combes.',
+                telemetryFocus: 'Trail braking release too abrupt into T1; scrubbing front tires on entry.',
+                actionItems: '30 min practice drill: Cold tire braking points into T1 & bus stop chicane.'
+            },
+            {
+                id: 'DB-2026-002',
+                date: '2026-09-18',
+                track: 'Brands Hatch',
+                car: 'Ray FF1600',
+                sessionType: 'Official Race',
+                trackTemp: 22,
+                trackState: 'Medium Usage',
+                quali: 10,
+                finish: 7,
+                startIr: 910,
+                irDelta: 40,
+                newIr: 950,
+                startSr: 3.20,
+                srDelta: 0.12,
+                newSr: 3.32,
+                posGained: 3,
+                bestLap: '1:32.110',
+                optimalLap: '1:31.890',
+                optimalDelta: '+0.220s',
+                avgPace: '1:32.550',
+                consistency: 'High (±0.35s)',
+                fuelTire: '15L / Standard',
+                incidents: 2,
+                lap1Delta: 1,
+                overtakes: 2,
+                defence: 1,
+                incidentCategory: 'Unforced Off-Track',
+                focusScore: 9,
+                positives: 'Very clean session. Minimal incident points and great mid-corner throttle control.',
+                telemetryFocus: 'Paddock Hill Bend exit line could carry +2 km/h minimum speed.',
+                actionItems: 'Review VRS telemetry overlay for Paddock Hill minimum corner speeds.'
+            },
+            {
+                id: 'DB-2026-003',
+                date: '2026-09-10',
+                track: 'Monza',
+                car: 'FIA F4',
+                sessionType: 'Official Race',
+                trackTemp: 31,
+                trackState: 'Green / Low Grip',
+                quali: 14,
+                finish: 11,
+                startIr: 860,
+                irDelta: 50,
+                newIr: 910,
+                startSr: 3.10,
+                srDelta: 0.10,
+                newSr: 3.20,
+                posGained: 3,
+                bestLap: '1:49.850',
+                optimalLap: '1:49.260',
+                optimalDelta: '+0.590s',
+                avgPace: '1:50.400',
+                consistency: 'Medium (±0.70s)',
+                fuelTire: '25L / Hard Compound',
+                incidents: 8,
+                lap1Delta: 3,
+                overtakes: 4,
+                defence: 2,
+                incidentCategory: 'Avoidable Contact',
+                focusScore: 7,
+                positives: 'Excellent slipstream draft usage into Turn 1 braking zone.',
+                telemetryFocus: 'First chicane curb strike caused 4x contact point on lap 3.',
+                actionItems: 'Avoid aggressive curb mounting on T1 sausage curbs when fully loaded.'
+            }
+        ];
+
+        let debriefStore = [];
+
+        // Load Debrief Store from localStorage
+        function loadDebriefStore() {
+            const saved = localStorage.getItem('arps_debrief_logs');
+            if (saved) {
+                try {
+                    debriefStore = JSON.parse(saved);
+                } catch(e) {
+                    debriefStore = [...defaultDebriefs];
+                }
+            } else {
+                debriefStore = [...defaultDebriefs];
+                localStorage.setItem('arps_debrief_logs', JSON.stringify(debriefStore));
+            }
+            updateBadgeCount();
+        }
+
+        function updateBadgeCount() {
+            const badge = document.getElementById('debrief-count-badge');
+            if (badge) badge.innerText = debriefStore.length;
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.getElementById('tab-log-session').classList.add('hidden');
+            document.getElementById('tab-debrief-history').classList.add('hidden');
+            document.getElementById('tab-telemetry-summary').classList.add('hidden');
+
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+                btn.className = 'nav-tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white flex items-center gap-2';
+            });
+
+            if (tabId === 'log-session') {
+                document.getElementById('tab-log-session').classList.remove('hidden');
+                document.getElementById('nav-btn-log').className = 'nav-tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all bg-arps-accent text-slate-950 font-semibold shadow-md shadow-cyan-500/20 flex items-center gap-2';
+            } else if (tabId === 'debrief-history') {
+                document.getElementById('tab-debrief-history').classList.remove('hidden');
+                document.getElementById('nav-btn-history').className = 'nav-tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all bg-arps-accent text-slate-950 font-semibold shadow-md shadow-cyan-500/20 flex items-center gap-2';
+                renderDebriefHistory();
+            } else if (tabId === 'telemetry-summary') {
+                document.getElementById('tab-telemetry-summary').classList.remove('hidden');
+                document.getElementById('nav-btn-summary').className = 'nav-tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all bg-arps-accent text-slate-950 font-semibold shadow-md shadow-cyan-500/20 flex items-center gap-2';
+            }
+        }
+
+        // Calculate Realtime Auto Metrics in Form
+        function calculateRealtimeMetrics() {
+            const quali = parseInt(document.getElementById('input-quali').value) || 0;
+            const finish = parseInt(document.getElementById('input-finish').value) || 0;
+            const startIr = parseInt(document.getElementById('input-start-ir').value) || 0;
+            const irDelta = parseInt(document.getElementById('input-ir-delta').value) || 0;
+            const incidents = parseInt(document.getElementById('input-incidents').value) || 0;
+
+            // Auto iRating
+            const newIr = startIr + irDelta;
+            document.getElementById('calc-new-ir').innerHTML = `<span>${newIr}</span> <i class="fa-solid fa-lock text-[10px] text-slate-600"></i>`;
+            document.getElementById('preview-ir-sync').innerText = `${newIr} iR (${irDelta >= 0 ? '+' : ''}${irDelta})`;
+
+            // Auto Positions Gained
+            const posGained = quali - finish;
+            const posElement = document.getElementById('calc-pos-gained');
+            const previewGrid = document.getElementById('preview-grid-delta');
+
+            if (posGained >= 0) {
+                posElement.className = 'w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-emerald-400 bg-slate-950/60 flex items-center justify-between';
+                posElement.innerHTML = `<span>+${posGained} Positions</span> <i class="fa-solid fa-arrow-up-long"></i>`;
+                previewGrid.innerText = `+${posGained} Positions`;
+                previewGrid.className = 'font-tech font-bold text-sm text-emerald-400 mt-0.5';
+            } else {
+                posElement.className = 'w-full glass-input rounded-xl px-3.5 py-2.5 text-xs font-tech font-bold text-rose-400 bg-slate-950/60 flex items-center justify-between';
+                posElement.innerHTML = `<span>${posGained} Positions</span> <i class="fa-solid fa-arrow-down-long"></i>`;
+                previewGrid.innerText = `${posGained} Positions`;
+                previewGrid.className = 'font-tech font-bold text-sm text-rose-400 mt-0.5';
+            }
+
+            // Risk Rating Calculation
+            const riskEl = document.getElementById('calc-risk-rating');
+            const incKpiEl = document.getElementById('kpi-impact-inc');
+            if (incidents <= 3) {
+                riskEl.innerText = 'LOW RISK (CLEAN)';
+                riskEl.className = 'font-tech font-bold text-sm text-emerald-400 mt-0.5';
+                incKpiEl.innerText = 'Low Incidents (<4 inc)';
+                incKpiEl.className = 'text-emerald-400 font-bold';
+            } else if (incidents <= 6) {
+                riskEl.innerText = 'MODERATE RISK';
+                riskEl.className = 'font-tech font-bold text-sm text-amber-400 mt-0.5';
+                incKpiEl.innerText = 'Attention Needed (6 inc)';
+                incKpiEl.className = 'text-amber-400 font-bold';
+            } else {
+                riskEl.innerText = 'HIGH INCIDENT RISK';
+                riskEl.className = 'font-tech font-bold text-sm text-rose-400 mt-0.5';
+                incKpiEl.innerText = 'CRITICAL FOCUS (7+ inc)';
+                incKpiEl.className = 'text-rose-400 font-bold';
+            }
+        }
+
+        // Form Submit Handler
+        function handleDebriefSubmit(e) {
+            e.preventDefault();
+
+            const quali = parseInt(document.getElementById('input-quali').value);
+            const finish = parseInt(document.getElementById('input-finish').value);
+            const startIr = parseInt(document.getElementById('input-start-ir').value);
+            const irDelta = parseInt(document.getElementById('input-ir-delta').value);
+            const startSr = parseFloat(document.getElementById('input-start-sr').value);
+            const srDelta = parseFloat(document.getElementById('input-sr-delta').value);
+
+            const selectedCat = document.querySelector('input[name="incident-category"]:checked').value;
+
+            const newEntry = {
+                id: 'DB-' + new Date().getFullYear() + '-' + Math.floor(100 + Math.random() * 900),
+                date: document.getElementById('input-date').value,
+                track: document.getElementById('input-track').value,
+                car: document.getElementById('input-car').value,
+                sessionType: document.getElementById('input-session-type').value,
+                trackTemp: parseInt(document.getElementById('input-track-temp').value),
+                trackState: document.getElementById('input-track-state').value,
+                quali: quali,
+                finish: finish,
+                startIr: startIr,
+                irDelta: irDelta,
+                newIr: startIr + irDelta,
+                startSr: startSr,
+                srDelta: srDelta,
+                newSr: (startSr + srDelta).toFixed(2),
+                posGained: quali - finish,
+                bestLap: document.getElementById('input-best-lap').value,
+                optimalLap: document.getElementById('input-optimal-lap').value,
+                optimalDelta: '+0.342s',
+                avgPace: document.getElementById('input-avg-pace').value,
+                consistency: document.getElementById('input-consistency').value,
+                fuelTire: document.getElementById('input-fuel-tire').value,
+                incidents: parseInt(document.getElementById('input-incidents').value),
+                lap1Delta: parseInt(document.getElementById('input-lap1-delta').value),
+                overtakes: parseInt(document.getElementById('input-overtakes').value),
+                defence: parseInt(document.getElementById('input-defence').value),
+                incidentCategory: selectedCat,
+                focusScore: document.getElementById('input-focus-score').value,
+                positives: document.getElementById('input-positives').value,
+                telemetryFocus: document.getElementById('input-telemetry-focus').value,
+                actionItems: document.getElementById('input-action-items').value
+            };
+
+            debriefStore.unshift(newEntry);
+            localStorage.setItem('arps_debrief_logs', JSON.stringify(debriefStore));
+            updateBadgeCount();
+
+            // Show Toast
+            const toast = document.getElementById('toast-banner');
+            toast.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            setTimeout(() => {
+                hideToast();
+            }, 6000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast-banner').classList.add('hidden');
+        }
+
+        function resetForm() {
+            document.getElementById('debrief-form').reset();
+            calculateRealtimeMetrics();
+        }
+
+        // Render History Tab Cards
+        function renderDebriefHistory() {
+            const container = document.getElementById('debrief-history-container');
+            const searchVal = document.getElementById('search-history').value.toLowerCase();
+            const trackFilter = document.getElementById('filter-track').value;
+            const incFilter = document.getElementById('filter-incident').value;
+
+            container.innerHTML = '';
+
+            const filtered = debriefStore.filter(item => {
+                const matchesSearch = item.track.toLowerCase().includes(searchVal) ||
+                                      item.car.toLowerCase().includes(searchVal) ||
+                                      item.positives.toLowerCase().includes(searchVal);
+
+                const matchesTrack = trackFilter === 'ALL' || item.track === trackFilter;
+
+                let matchesInc = true;
+                if (incFilter === 'CLEAN') matchesInc = item.incidents < 4;
+                if (incFilter === 'HIGH') matchesInc = item.incidents >= 6;
+
+                return matchesSearch && matchesTrack && matchesInc;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 glass-card rounded-2xl">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-2"></i>
+                        <p class="text-xs text-arps-silver">No debrief logs match the selected filter criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(log => {
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-xl p-5 space-y-3 relative hover:border-cyan-500/40 transition-all cursor-pointer';
+                card.onclick = () => openDebriefModal(log.id);
+
+                const incBadgeColor = log.incidents <= 3 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+                                      log.incidents <= 6 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+                                      'bg-rose-500/10 text-rose-400 border-rose-500/30';
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span class="px-2 py-0.5 bg-cyan-950 text-cyan-300 border border-cyan-500/30 rounded text-[10px] font-tech font-bold">
+                            ${log.car}
+                        </span>
+                        <span class="text-[10px] text-arps-silver">${log.date}</span>
+                    </div>
+
+                    <div>
+                        <h4 class="font-tech font-bold text-sm text-white">${log.track}</h4>
+                        <div class="flex items-center gap-3 mt-1 text-xs">
+                            <span class="text-slate-300">Quali: <strong>P${log.quali}</strong> → Finish: <strong>P${log.finish}</strong></span>
+                            <span class="${log.posGained >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">
+                                (${log.posGained >= 0 ? '+' : ''}${log.posGained})
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60 text-[11px]">
+                        <div>
+                            <span class="text-slate-400">Best Lap:</span>
+                            <span class="font-tech font-bold text-arps-accent block">${log.bestLap}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">iRating Delta:</span>
+                            <span class="font-tech font-bold ${log.irDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'} block">
+                                ${log.irDelta >= 0 ? '+' : ''}${log.irDelta} iR
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${incBadgeColor}">
+                            ${log.incidents} Incidents (${log.incidentCategory})
+                        </span>
+                        <span class="text-[10px] text-arps-accent hover:underline flex items-center gap-1">
+                            View Full <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        </span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterDebriefHistory() {
+            renderDebriefHistory();
+        }
+
+        // Open Modal Details
+        function openDebriefModal(id) {
+            const log = debriefStore.find(item => item.id === id);
+            if (!log) return;
+
+            document.getElementById('modal-car-badge').innerText = log.car;
+            document.getElementById('modal-date').innerText = log.date + ' | ID: ' + log.id;
+            document.getElementById('modal-track-title').innerText = log.track + ' (' + log.sessionType + ')';
+
+            const body = document.getElementById('modal-content-body');
+            body.innerHTML = `
+                <div class="grid grid-cols-3 gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
+                    <div>
+                        <div class="text-[10px] text-arps-silver">Finish Position</div>
+                        <div class="text-sm font-tech font-bold text-white">P${log.finish} (From P${log.quali})</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-arps-silver">iRating</div>
+                        <div class="text-sm font-tech font-bold text-arps-accent">${log.newIr} (${log.irDelta >= 0 ? '+' : ''}${log.irDelta})</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-arps-silver">Safety Rating</div>
+                        <div class="text-sm font-tech font-bold text-emerald-400">${log.newSr} (+${log.srDelta})</div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="font-tech text-[11px] font-bold text-cyan-400 uppercase">Pace Telemetry</div>
+                    <div class="grid grid-cols-2 gap-2 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div>Best Lap: <strong class="text-white">${log.bestLap}</strong></div>
+                        <div>Optimal Lap: <strong class="text-amber-400">${log.optimalLap}</strong> (${log.optimalDelta})</div>
+                        <div>Avg Stint Pace: <strong class="text-white">${log.avgPace}</strong></div>
+                        <div>Consistency: <strong class="text-emerald-400">${log.consistency}</strong></div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="font-tech text-[11px] font-bold text-cyan-400 uppercase">Qualitative Debrief</div>
+                    <div class="space-y-2 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div><strong class="text-slate-300">Positives:</strong> <p class="text-slate-400">${log.positives}</p></div>
+                        <div><strong class="text-slate-300">Telemetry Focus:</strong> <p class="text-slate-400">${log.telemetryFocus}</p></div>
+                        <div><strong class="text-slate-300">Action Items:</strong> <p class="text-cyan-300 font-medium">${log.actionItems}</p></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('debrief-modal').classList.remove('hidden');
+        }
+
+        function closeDebriefModal() {
+            document.getElementById('debrief-modal').classList.add('hidden');
+        }
+
+        function exportDebriefData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(debriefStore, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `ARPS_Debrief_Export_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function resetDefaultData() {
+            debriefStore = [...defaultDebriefs];
+            localStorage.setItem('arps_debrief_logs', JSON.stringify(debriefStore));
+            updateBadgeCount();
+            renderDebriefHistory();
+            alert('Debrief logs reset to default sample sessions.');
+        }
+
+        // Initialize App Date & Metrics
+        window.onload = function() {
+            document.getElementById('input-date').value = new Date().toISOString().slice(0, 10);
+            loadDebriefStore();
+            calculateRealtimeMetrics();
+        };
+    </script>
+</body>
+</html>
