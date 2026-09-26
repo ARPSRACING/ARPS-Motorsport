@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ARPS Motorsport | Driver Development Centre</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(0, 240, 255, 0.08), transparent 35%),
+                #080f24;
+            color: #ffffff;
+        }
+
+        .topbar {
+            padding: 22px 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(8,15,36,0.95);
+        }
+
+        .brand {
+            font-size: 14px;
+            letter-spacing: 3px;
+            color: #00f0ff;
+            font-weight: bold;
+        }
+
+        .title {
+            margin-top: 8px;
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            margin-top: 5px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            padding: 45px 30px 60px;
+        }
+
+        .hero {
+            padding: 35px;
+            border: 1px solid rgba(0,240,255,0.15);
+            border-radius: 18px;
+            background:
+                linear-gradient(135deg, rgba(19,30,58,0.96), rgba(10,18,40,0.96));
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+
+        .hero-label {
+            color: #00f0ff;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            margin: 12px 0 10px;
+            font-size: clamp(32px, 5vw, 56px);
+        }
+
+        .hero p {
+            max-width: 750px;
+            color: #94a3b8;
+            line-height: 1.7;
+        }
+
+        .section-title {
+            margin: 45px 0 18px;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            min-height: 190px;
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: #131e3a;
+            transition: 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0,240,255,0.45);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .number {
+            font-size: 12px;
+            color: #00f0ff;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .card h2 {
+            margin: 12px 0;
+            font-size: 19px;
+        }
+
+        .card p {
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: #0284c7;
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background: #00a9e8;
+        }
+
+        .footer {
+            margin-top: 55px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            color: #64748b;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 1100px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                padding: 20px;
+            }
+
+            .container {
+                padding: 25px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="brand">ARPS MOTORSPORT</div>
+    <div class="title">Driver Development & Motorsport Management System</div>
+    <div class="subtitle">Central Performance • Operations • Media • Administration • System</div>
+</header>
+
+<main class="container">
+
+    <section class="hero">
+        <div class="hero-label">Control Centre</div>
+
+        <h1>Welcome to ARPS Motorsport</h1>
+
+        <p>
+            The central hub for driver development, race operations,
+            performance analysis, sponsorship, media, administration
+            and the wider ARPS Motorsport system.
+        </p>
+    </section>
+
+    <div class="section-title">ARPS Motorsport System</div>
+
+    <section class="grid">
+
+        <article class="card">
+            <div class="number">01</div>
+            <h2>Race Operations</h2>
+            <p>
+                Race weekends, testing, driving technique,
+                racecraft, setup, tyres, weather and debriefs.
+            </p>
+            <a class="button" href="01-RACE-OPERATIONS/">Open Section</a>
+        </article>
+
+        <article class="card">
+            <div class="number">02</div>
+            <h2>Performance & Data</h2>
+            <p>
+                Telemetry, pace, iRacing, race history,
+                driver development, consistency and performance data.
+            </p>
+            <a class="button" href="02-PERFORMANCE-AND-DATA/">Open Section</a>
+        </article>
+
+        <article class="card">
+            <div class="number">03</div>
+            <h2>Sponsorship & Media</h2>
+            <p>
+                Sponsors, content, social media, merchandise,
+                media performance and partner management.
+            </p>
+            <a class="button" href="03-SPONSORSHIP-AND-MEDIA/">Open Section</a>
+        </article>
+
+        <article class="card">
+            <div class="number">04</div>
+            <h2>Admin</h2>
+            <p>
+                Calendar, documents, budgets, travel,
+                contacts, equipment, insurance and race entries.
+            </p>
+            <a class="button" href="04-ADMIN/">Open Section</a>
+        </article>
+
+        <article class="card">
+            <div class="number">05</div>
+            <h2>System</h2>
+            <p>
+                Driver settings, system configuration,
+                data management, integrations, security and help.
+            </p>
+            <a class="button" href="05-SYSTEM/">Open Section</a>
+        </article>
+
+    </section>
+
+    <div class="footer">
+        ARPS MOTORSPORT • DRIVER DEVELOPMENT CENTRE
+    </div>
+
+</main>
+
+</body>
+</html>
